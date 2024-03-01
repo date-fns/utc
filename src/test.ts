@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { UTCDate } from "./date";
 
 describe("UTCDate", () => {
@@ -17,8 +17,8 @@ describe("UTCDate", () => {
       expect(+new UTCDate(540000000000)).toBe(540000000000);
     });
 
-    it("allows to parse the string", () => {
-      expect(+new UTCDate("2023-05-03")).toBe(+new Date("2023-05-03"));
+    it("allows to parse the string in UTC", () => {
+      expect(new UTCDate("2023-05-01").getTime()).toBe(Date.UTC(2023, 4, 1));
     });
 
     it("allows to create date from another date", () => {
