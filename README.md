@@ -42,9 +42,9 @@ all original `Date` functionality:
 ```ts
 import { UTCDateMini, UTCDate } from "@date-fns/utc";
 
-// UTCDateMini will format date-time in the system time zone:
+// UTCDateMini will format date-time in the UTC, like expected:
 new UTCDateMini(2022, 2, 13).toString();
-//=> 'Sat Mar 12 2022 16:00:00 GMT-0800 (Pacific Standard Time)'
+//=> 'Sun Mar 13 2022 00:00:00 GMT+0000 (Coordinated Universal Time)'
 
 // UTCDate will format date-time in the UTC, like expected:
 new UTCDate(2022, 2, 13).toString();
