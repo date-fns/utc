@@ -14,4 +14,10 @@
  */
 export class UTCDate extends Date {
   getTimezoneOffset(): 0;
+
+  /** @deprecated Use getFullYear instead. */
+  getYear(): number;
+
+  /** @deprecated Use setFullYear instead. */
+  setYear(year: number): number;
 }

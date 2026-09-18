@@ -17,6 +17,20 @@ export class UTCDateMini extends Date {
   getTimezoneOffset() {
     return 0;
   }
+
+  getYear() {
+    return super.getUTCFullYear() - 1900;
+  }
+
+  setYear(year) {
+    // Defer conversion to preserve the native setter's receiver and coercion behavior.
+    return super.setUTCFullYear({
+      valueOf: () => {
+        const integer = Math.trunc(+year);
+        return integer >= 0 && integer <= 99 ? 1900 + integer : integer;
+      },
+    });
+  }
 }
 
 // Replace getter and setter functions with UTC counterparts

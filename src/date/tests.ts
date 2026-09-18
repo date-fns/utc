@@ -1,6 +1,96 @@
 import FakeTimers from "@sinonjs/fake-timers";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { UTCDate } from "./index.js";
+import { UTCDateMini } from "./mini.js";
+
+describe.each([
+  ["UTCDate", UTCDate],
+  ["UTCDateMini", UTCDateMini],
+])("%s legacy year methods", (_, DateClass) => {
+  it("gets the UTC year relative to 1900 at a local year boundary", () => {
+    expect(new DateClass("1999-12-31T23:59:59Z").getYear()).toBe(99);
+    expect(new DateClass("2000-01-01T00:00:00Z").getYear()).toBe(100);
+    expect(new DateClass("0099-01-01T00:00:00Z").getYear()).toBe(-1801);
+  });
+
+  it("returns NaN for an invalid date", () => {
+    expect(new DateClass(NaN).getYear()).toBeNaN();
+  });
+
+  it.each([
+    [0, 1900],
+    [99, 1999],
+    [100, 100],
+    [2001, 2001],
+    [99.9, 1999],
+    [-0.9, 1900],
+    [-1, -1],
+  ])("sets year %s as %s while preserving UTC fields", (year, expectedYear) => {
+    const date = new DateClass("1999-12-31T23:59:59.123Z");
+    const expected = new Date("1999-12-31T23:59:59.123Z");
+    expected.setUTCFullYear(expectedYear);
+    expect(date.setYear(year)).toBe(expected.getTime());
+    expect(date.getTime()).toBe(expected.getTime());
+  });
+
+  it("revives an invalid date using January 1 at midnight UTC", () => {
+    const date = new DateClass(NaN);
+    expect(date.setYear(99)).toBe(Date.UTC(1999, 0, 1));
+    expect(date.toISOString()).toBe("1999-01-01T00:00:00.000Z");
+  });
+
+  it.each([undefined, NaN, Infinity, -Infinity])(
+    "invalidates the date for %s",
+    (year) => {
+      const date = new DateClass(0);
+      expect(Reflect.apply(date.setYear, date, [year])).toBeNaN();
+      expect(date.getTime()).toBeNaN();
+    },
+  );
+
+  it.each([99n, Symbol("year")])(
+    "rejects %s without changing the date",
+    (year) => {
+      const date = new DateClass(0);
+      expect(() => Reflect.apply(date.setYear, date, [year])).toThrow(
+        TypeError,
+      );
+      expect(date.getTime()).toBe(0);
+    },
+  );
+
+  it("coerces the year once using the native UTC setter behavior", () => {
+    const date = new DateClass("2000-06-15T12:34:56.789Z");
+    const expected = new Date(date.getTime());
+    Reflect.apply(expected.setUTCFullYear, expected, [
+      {
+        valueOf() {
+          expected.setTime(0);
+          return 1999;
+        },
+      },
+    ]);
+    let calls = 0;
+    const year = {
+      valueOf() {
+        calls++;
+        date.setTime(0);
+        return 99;
+      },
+    };
+    expect(Reflect.apply(date.setYear, date, [year])).toBe(expected.getTime());
+    expect(calls).toBe(1);
+  });
+
+  it("validates the receiver before coercing the year", () => {
+    let calls = 0;
+    const year = { valueOf: () => calls++ };
+    expect(() =>
+      Reflect.apply(DateClass.prototype.setYear, {}, [year]),
+    ).toThrow(TypeError);
+    expect(calls).toBe(0);
+  });
+});
 
 describe("UTCDate", () => {
   it("creates date in UTC", () => {
